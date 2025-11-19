@@ -1,13 +1,18 @@
 #
-# Copyright (C) 2024 The LineageOS Project
-#
-# SPDX-License-Identifier: Apache-2.0
+# Android 4.0 / LineageOS ICS Product Definitions
 #
 
+# Include the product makefiles
 PRODUCT_MAKEFILES := \
     $(LOCAL_DIR)/aosp_vboxware.mk \
     $(LOCAL_DIR)/lineage_vboxware.mk
 
-$(foreach build_type, user userdebug eng, \
-    $(eval COMMON_LUNCH_CHOICES += aosp_vboxware-$(build_type)) \
-    $(eval COMMON_LUNCH_CHOICES += lineage_vboxware-$(build_type)))
+# Lunch menu definitions
+# ICS uses the LUNCH_MENU_CHOICES variable
+LUNCH_MENU_CHOICES := \
+    aosp_vboxware-eng \
+    aosp_vboxware-userdebug \
+    aosp_vboxware-user \
+    lineage_vboxware-eng \
+    lineage_vboxware-userdebug \
+    lineage_vboxware-user
