@@ -1,7 +1,5 @@
 #
-# Copyright (C) 2024 The LineageOS Project
-#
-# SPDX-License-Identifier: Apache-2.0
+# Android 4.0 / LineageOS ICS BoardConfig.mk
 #
 
 USES_DEVICE_VIRT_VBOXWARE := true
@@ -9,82 +7,64 @@ USES_DEVICE_VIRT_VBOXWARE := true
 # Boot manager
 TARGET_BOOT_MANAGER := grub
 
-# GRUB
-TARGET_GRUB_ARCH ?= x86_64-efi
-TARGET_GRUB_2ND_ARCH ?= i386-pc
+# GRUB architecture
+TARGET_GRUB_ARCH := x86_64-efi
+TARGET_GRUB_2ND_ARCH := i386-pc
 
-# Inherit from common
-include device/virt/virt-common/BoardConfigVirtCommon.mk
+# Include common definitions
+include $(LOCAL_DIR)/device/virt/virt-common/BoardConfigVirtCommon.mk
 
-# Arch
+# CPU / Architecture
 TARGET_CPU_ABI := x86_64
 TARGET_ARCH := x86_64
 TARGET_ARCH_VARIANT := sandybridge
 
-# Boot manager
-TARGET_GRUB_BOOT_CONFIGS += $(DEVICE_PATH)/bootmgr/grub/grub-boot.cfg
-TARGET_GRUB_INSTALL_CONFIGS += $(DEVICE_PATH)/bootmgr/grub/grub-install.cfg
+# GRUB boot configs
+TARGET_GRUB_BOOT_CONFIGS := $(DEVICE_PATH)/bootmgr/grub/grub-boot.cfg
+TARGET_GRUB_INSTALL_CONFIGS := $(DEVICE_PATH)/bootmgr/grub/grub-install.cfg
 
-# Bootconfig
-BOARD_BOOTCONFIG += \
-    androidboot.console=ttyS0 \
-    androidboot.hardware=vboxware \
-    androidboot.partition_map=\"sdb,userdata\"
+# Kernel command line
+BOARD_KERNEL_CMDLINE := 8250.nr_uarts=1 androidboot.console=ttyS0 androidboot.hardware=vboxware androidboot.partition_map="sdb,userdata"
 
-# Fstab
-ifeq ($(AB_OTA_UPDATER),true)
-$(call soong_config_set,VBOXWARE_FSTAB,PARTITION_SCHEME,ab)
+BOARD_KERNEL_CMDLINE_RECOVERY := console=tty0
+
+BOARD_KERNEL_IMAGE_NAME := bzImage
+
+# Kernel source / prebuilt
+ifeq ($(wildcard $(TARGET_KERNEL_SOURCE)/Makefile),)
+    ifneq ($(wildcard $(TARGET_PREBUILT_KERNEL_DIR)/kernel),)
+        BOARD_VENDOR_KERNEL_MODULES := $(wildcard $(TARGET_PREBUILT_KERNEL_DIR)/*.ko)
+    endif
 else
-$(call soong_config_set,VBOXWARE_FSTAB,PARTITION_SCHEME,a)
+    TARGET_KERNEL_ARCH := x86
+    TARGET_KERNEL_CONFIG := lineageos/vboxware.config
 endif
 
 # Graphics (Mesa)
 BOARD_MESA3D_USES_MESON_BUILD := true
 BOARD_MESA3D_GALLIUM_DRIVERS := svga
 
-# Kernel
-BOARD_KERNEL_CMDLINE += \
-    8250.nr_uarts=1
-
-BOARD_KERNEL_CMDLINE_RECOVERY += \
-    console=tty0
-
-BOARD_KERNEL_IMAGE_NAME := bzImage
-
-ifneq ($(wildcard $(TARGET_KERNEL_SOURCE)/Makefile),)
-TARGET_KERNEL_ARCH := x86
-TARGET_KERNEL_CONFIG += \
-    lineageos/vboxware.config
-else ifneq ($(wildcard $(TARGET_PREBUILT_KERNEL_DIR)/kernel),)
-BOARD_VENDOR_KERNEL_MODULES := \
-    $(wildcard $(TARGET_PREBUILT_KERNEL_DIR)/*.ko)
-endif
-
-# Pre-install checks
-$(call soong_config_set,VIRT_PREINSTALL_CHECK,BOOT_DISK_NAME,sda)
-$(call soong_config_set,VIRT_PREINSTALL_CHECK,USERDATA_DISK_NAME,sdb)
-$(call soong_config_set,VIRT_PREINSTALL_CHECK,DRM_CARD_NAME,vmwgfx)
+# Pre-install checks (replace soong_config_set with simple variables)
+VIRT_PREINSTALL_CHECK_BOOT_DISK_NAME := sda
+VIRT_PREINSTALL_CHECK_USERDATA_DISK_NAME := sdb
+VIRT_PREINSTALL_CHECK_DRM_CARD_NAME := vmwgfx
 
 # Properties
-TARGET_VENDOR_PROP += $(DEVICE_PATH)/configs/properties/vendor.prop
+TARGET_VENDOR_PROP := $(DEVICE_PATH)/configs/properties/vendor.prop
 
 # Recovery
 TARGET_RECOVERY_FSTAB_GENRULE := gen_fstab_vboxware
 TARGET_RECOVERY_PIXEL_FORMAT := BGRX_8888
 
 # SELinux
-BOARD_VENDOR_SEPOLICY_DIRS += \
-    $(DEVICE_PATH)/sepolicy/vendor
-
+BOARD_VENDOR_SEPOLICY_DIRS := $(DEVICE_PATH)/sepolicy/vendor
 ifeq ($(AB_OTA_UPDATER),true)
-BOARD_VENDOR_SEPOLICY_DIRS += \
-    $(DEVICE_PATH)/sepolicy/vendor/ab
+    BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/vendor/ab
 else
-BOARD_VENDOR_SEPOLICY_DIRS += \
-    $(DEVICE_PATH)/sepolicy/vendor/a
+    BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/vendor/a
 endif
 
-# VINTF
-ODM_MANIFEST_SKUS := display_drm display_fb
-ODM_MANIFEST_DISPLAY_DRM_FILES := $(DEVICE_PATH)/configs/vintf/manifest_sku_display_drm.xml
-ODM_MANIFEST_DISPLAY_FB_FILES := $(DEVICE_PATH)/configs/vintf/manifest_sku_display_fb.xml
+# VINTF (ICS does not support VINTF, keep as comments for reference)
+#ODM_MANIFEST_SKUS := display_drm display_fb
+#ODM_MANIFEST_DISPLAY_DRM_FILES := $(DEVICE_PATH)/configs/vintf/manifest_sku_display_drm.xml
+#ODM_MANIFEST_DISPLAY_FB_FILES := $(DEVICE_PATH)/configs/vintf/manifest_sku_display_fb.xml
